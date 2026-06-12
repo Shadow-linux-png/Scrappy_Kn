@@ -1,11 +1,9 @@
-# main.py
+# app.py
 
-from fastapi import FastAPI
-from pydantic import BaseModel
+import streamlit as st
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from scrappy_knn import ScrappyKNN
-from typing import List
 
 # Load dataset
 iris = datasets.load_iris()
@@ -14,38 +12,67 @@ labels = iris.target
 
 # Split dataset
 features_train, features_test, labels_train, labels_test = train_test_split(
-    features, labels, test_size=0.5
+    features, labels, test_size=0.5, random_state=42
 )
 
-# Train your ScrappyKNN model
+# Train model
 model = ScrappyKNN()
 model.fit(features_train, labels_train)
 
-# Define FastAPI app
-app = FastAPI(title="ScrappyKNN Iris Predictor API")
+# Page Config
+st.set_page_config(
+    page_title="ScrappyKNN Iris Predictor",
+    page_icon="🌸",
+    layout="centered"
+)
 
-# Define input model
-class IrisInput(BaseModel):
-    sepal_length: float
-    sepal_width: float
-    petal_length: float
-    petal_width: float
+# Title
+st.title("🌸 ScrappyKNN Iris Predictor")
+st.write("Predict Iris flower species using your custom ScrappyKNN algorithm.")
 
-@app.get("/")
-def home():
-    return {"message": "Welcome to the ScrappyKNN Iris Predictor!"}
+# Input Fields
+sepal_length = st.number_input(
+    "Sepal Length (cm)",
+    min_value=0.0,
+    value=5.1
+)
 
-@app.post("/predict")
-def predict_species(data: IrisInput):
-    features = [[
-        data.sepal_length,
-        data.sepal_width,
-        data.petal_length,
-        data.petal_width
+sepal_width = st.number_input(
+    "Sepal Width (cm)",
+    min_value=0.0,
+    value=3.5
+)
+
+petal_length = st.number_input(
+    "Petal Length (cm)",
+    min_value=0.0,
+    value=1.4
+)
+
+petal_width = st.number_input(
+    "Petal Width (cm)",
+    min_value=0.0,
+    value=0.2
+)
+
+# Prediction Button
+if st.button("Predict Species"):
+    sample = [[
+        sepal_length,
+        sepal_width,
+        petal_length,
+        petal_width
     ]]
-    prediction = model.predict(features)
-    species_map = {0: "setosa", 1: "versicolor", 2: "virginica"}
-    return {
-        "predicted_class": int(prediction[0]),
-        "species": species_map[prediction[0]]
+
+    prediction = model.predict(sample)
+
+    species_map = {
+        0: "Setosa",
+        1: "Versicolor",
+        2: "Virginica"
     }
+
+    species = species_map[prediction[0]]
+
+    st.success(f"Predicted Species: {species}")
+    st.write(f"Class ID: {prediction[0]}")
